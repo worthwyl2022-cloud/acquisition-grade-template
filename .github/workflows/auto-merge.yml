@@ -1,0 +1,78 @@
+name: Auto-merge automated PRs
+
+on:
+  pull_request_target:
+    types: [opened, reopened, labeled, synchronize, ready_for_review]
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR label
+        id: label
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(l => l.name)
+            core.setOutput('has_automated', labels.includes('automated'))
+      - name: Exit if not automated
+        if: steps.label.outputs.has_automated != 'true'
+        run: |
+          echo "PR is not labeled 'automated' - skipping auto-merge"
+          exit 0
+
+      - name: Wait for required checks to complete
+        uses: actions/github-script@v6
+        id: checks
+        with:
+          script: |
+            const pr = context.payload.pull_request
+            const { owner, repo } = context.repo
+            const ref = pr.head.sha
+            // Poll for check suites
+            const max = 30
+            for (let i = 0; i < max; i++) {
+              const suites = await github.checks.listForRef({ owner, repo, ref })
+              const allCompleted = suites.data.check_runs.length > 0 && suites.data.check_runs.every(c => c.conclusion === 'success')
+              if (allCompleted) {
+                core.setOutput('checks_ok','true')
+                return
+              }
+              await new Promise(r => setTimeout(r, 5000))
+            }
+            core.setOutput('checks_ok','false')
+      - name: Exit if checks not OK
+        if: steps.checks.outputs.checks_ok != 'true'
+        run: |
+          echo "Required checks have not completed successfully. Skipping auto-merge."
+          exit 0
+
+      - name: Ensure at least one approval
+        id: approvals
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const pr = context.payload.pull_request
+            const { owner, repo } = context.repo
+            const reviews = await github.pulls.listReviews({ owner, repo, pull_number: pr.number })
+            const approved = reviews.data.some(r => r.state === 'APPROVED')
+            core.setOutput('approved', approved)
+      - name: Exit if no approvals
+        if: steps.approvals.outputs.approved != 'true'
+        run: |
+          echo "No APPROVED reviews yet. Skipping auto-merge."
+          exit 0
+
+      - name: Merge the PR
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const pr = context.payload.pull_request
+            const { owner, repo } = context.repo
+            await github.pulls.merge({ owner, repo, pull_number: pr.number, merge_method: 'squash' })
+            core.info(`Merged PR #${pr.number}`)

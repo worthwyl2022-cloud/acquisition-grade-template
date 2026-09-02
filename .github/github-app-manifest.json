@@ -1,0 +1,15 @@
+{
+  "name": "acquisition-grade-template-app",
+  "description": "GitHub App for automating repo operations (unpack, create PRs, merges)",
+  "url": "https://github.com/worthwyl2022-cloud/acquisition-grade-template",
+  "hook_attributes": {
+    "url": "https://example.com/github-app-hook"
+  },
+  "redirect_url": "https://github.com/worthwyl2022-cloud/acquisition-grade-template/settings/apps",
+  "public": false,
+  "default_permissions": {
+    "contents": "read",
+    "pull_requests": "write"
+  },
+  "default_events": ["push", "pull_request"]
+}

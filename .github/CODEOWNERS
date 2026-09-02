@@ -1,0 +1,6 @@
+# CODEOWNERS
+
+# Specify code owners for the repository root
+# Format: <pattern> <owner>
+
+* @worthwyl2022-cloud
