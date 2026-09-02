@@ -1,0 +1,100 @@
+name: Auto-unpack uploaded ZIP
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**/*.zip'
+
+jobs:
+  unpack:
+    name: Unpack ZIP and open PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Locate zip file
+        id: findzip
+        run: |
+          set -euo pipefail
+          ZIP=$(git ls-files '*.zip' | head -n 1 || true)
+          if [ -z "$ZIP" ]; then
+            echo "No zip file found in this commit. Exiting." >&2
+            echo "zip_found=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          echo "zip_found=true" >> $GITHUB_OUTPUT
+          echo "zip_path=$ZIP" >> $GITHUB_OUTPUT
+
+      - name: Unpack and copy contents
+        if: steps.findzip.outputs.zip_found == 'true'
+        run: |
+          set -euo pipefail
+          ZIP_PATH="${{ steps.findzip.outputs.zip_path }}"
+          echo "Found zip: $ZIP_PATH"
+          TMPDIR=$(mktemp -d)
+          unzip -q "$ZIP_PATH" -d "$TMPDIR"
+
+          if [ -d "$TMPDIR/cranium-push" ]; then
+            echo "Copying cranium-push contents into repository root"
+            cp -r "$TMPDIR/cranium-push/." .
+          else
+            echo "ERROR: cranium-push directory not found inside zip" >&2
+            ls -la "$TMPDIR"
+            exit 1
+          fi
+
+      - name: Commit and push new branch
+        if: steps.findzip.outputs.zip_found == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          BRANCH="ai/unpack-$(date +%s)"
+          git checkout -b "$BRANCH"
+
+          # Add and commit all changes
+          git add --all
+
+          # Avoid failing if there are no changes to commit
+          if git diff --cached --quiet; then
+            echo "No changes to commit after unpacking. Exiting."
+            exit 0
+          fi
+
+          git commit -m "Add governed commit path, receipt chain, kernel invariants, and first adversarial property registry\n\n- AuthorityReceipt + ReceiptChain + InMemoryReceiptChain\n- CommitOrchestrator as sole production entry point\n- AuthorityMonotonicityInvariant, ProtectedLaneInvariant, NoIsolatedSubjectInvariant\n- AuthorityTransitionEvaluated domain event\n- Simplified pure KernelStateReducer with version + duplicate-ID guards\n- PROPERTY_REGISTRY.md (adversarial property tracking)\n- StaleStateAttackTest (ATTACK-001)"
+
+          git push --set-upstream origin "$BRANCH"
+
+      - name: Create Pull Request
+        if: steps.findzip.outputs.zip_found == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          PR_TITLE="Add governed commit path, receipt chain, kernel invariants, and first adversarial property registry"
+          PR_BODY="Automated unpack of uploaded ZIP by workflow. Please review the proposed changes."
+
+          # Create PR via REST API
+          curl -s -X POST -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/pulls \
+            -d "{\"title\":\"${PR_TITLE}\",\"head\":\"${BRANCH}\",\"base\":\"main\",\"body\":\"${PR_BODY}\"}"
+
+      - name: Cleanup temp files
+        if: steps.findzip.outputs.zip_found == 'true'
+        run: |
+          set -euo pipefail
+          # no-op (temp files created in workspace will be cleaned up automatically)
+          echo "Done"
