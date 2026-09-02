@@ -1,0 +1,52 @@
+{
+  "name": "acquisition-grade-template",
+  "version": "1.0.0",
+  "description": "Acquisition-grade tier 1 template with Microsoft governance, kernel invariants, and authority receipt chains",
+  "main": "scripts/github-app/index.js",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "scripts": {
+    "test": "npm run test:unit && npm run test:lint",
+    "test:unit": "node --test 'test/**/*.test.js'",
+    "test:lint": "echo 'Lint checks would run here'",
+    "start": "node scripts/github-app/index.js",
+    "audit": "npm audit --audit-level=moderate"
+  },
+  "workspaces": [
+    "scripts/github-app"
+  ],
+  "keywords": [
+    "acquisition-grade",
+    "microsoft-tier-1",
+    "kernel-invariants",
+    "authority-receipt-chain",
+    "governed-commits",
+    "property-registry"
+  ],
+  "author": "worthwyl2022-cloud",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/worthwyl2022-cloud/acquisition-grade-template.git"
+  },
+  "dependencies": {
+    "@octokit/auth-app": "^3.6.0",
+    "@octokit/rest": "^19.0.0",
+    "body-parser": "^1.20.2",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {},
+  "files": [
+    "scripts/",
+    "src/",
+    "cranium-push/",
+    "LICENSE",
+    "README.md",
+    "SECURITY.md",
+    "CODE_OF_CONDUCT.md",
+    "PROPERTY_REGISTRY.md"
+  ]
+}
