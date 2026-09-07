@@ -6,13 +6,13 @@
   "type": "module",
   "license": "MIT",
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
+    "node": ">=24.0.0",
+    "npm": ">=11.0.0"
   },
   "scripts": {
     "test": "npm run test:unit && npm run test:lint",
-    "test:unit": "node --test 'test/**/*.test.js'",
-    "test:lint": "echo 'Lint checks would run here'",
+    "test:unit": "node --test test/template.test.js",
+    "test:lint": "node --check scripts/github-app/index.js",
     "start": "node scripts/github-app/index.js",
     "audit": "npm audit --audit-level=moderate"
   },
@@ -33,12 +33,11 @@
     "url": "https://github.com/worthwyl2022-cloud/acquisition-grade-template.git"
   },
   "dependencies": {
-    "@octokit/auth-app": "^3.6.0",
-    "@octokit/rest": "^19.0.0",
-    "body-parser": "^1.20.2",
-    "express": "^4.18.2"
+    "@octokit/auth-app": "^8.3.1",
+    "@octokit/rest": "^22.0.1",
+    "body-parser": "^2.3.0",
+    "express": "^5.2.1"
   },
-  "devDependencies": {},
   "files": [
     "scripts/",
     "src/",
