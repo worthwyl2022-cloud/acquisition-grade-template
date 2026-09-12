@@ -49,5 +49,8 @@
     "SECURITY.md",
     "CODE_OF_CONDUCT.md",
     "PROPERTY_REGISTRY.md"
-  ]
+  ],
+  "overrides": {
+    "qs": "^6.16.0"
+  }
 }
