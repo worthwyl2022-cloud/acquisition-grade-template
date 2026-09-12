@@ -1,0 +1,29 @@
+{
+  "name": "cranium-core-hardened",
+  "version": "1.0.0",
+  "description": "Cranium Core — Sole Authority Issuance Boundary. Authority is not claimed. It is granted—only through Cranium Core.",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "test:adversarial": "node --loader ts-node/esm tests/adversarial/run.ts"
+  },
+  "keywords": [
+    "cranium",
+    "authority",
+    "cognitive-substrate",
+    "governance"
+  ],
+  "author": "Wyl Mathes",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@types/jest": "^29.0.0",
+    "@types/node": "^20.0.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.4.12",
+    "ts-node": "^10.9.0",
+    "tsx": "^4.23.13",
+    "typescript": "^5.4.0"
+  }
+}
